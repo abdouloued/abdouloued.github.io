@@ -1,25 +1,565 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="refresh" content="0; url=/">
-<title>AgentScope</title>
-<link rel="canonical" href="https://abdouloued.github.io/">
-<style>
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: #080a0f;
-    color: #edf2f7;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-  a { color: #62d9ff; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentScope — Scope Firewall for AI Coding Agents</title>
+    <meta name="description" content="Your AI agent did exactly what you asked. AgentScope proves it. Scope firewall and audit layer for Claude Code, Codex, Cursor, Gemini CLI and more.">
+    <meta name="keywords" content="AI agent, code safety, scope firewall, audit, Claude Code, Codex, Cursor, developer tools, Rust CLI">
+    <meta property="og:title" content="AgentScope — Did your AI agent do only what you asked?">
+    <meta property="og:description" content="Scope firewall and audit layer for AI coding agents. Works with Claude Code, Codex, Cursor, Gemini CLI, and more.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://abdouloued.github.io/agentscope.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #06080d; color: #c9d1d9; line-height: 1.6; overflow-x: hidden;
+        }
+        .bg-grid {
+            position: fixed; inset: 0; z-index: 0;
+            background-image:
+                linear-gradient(rgba(99,102,241,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99,102,241,.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+        .bg-glow {
+            position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+            width: 800px; height: 800px; z-index: 0;
+            background: radial-gradient(circle, rgba(99,102,241,.08) 0%, transparent 70%);
+            animation: pulse-glow 8s ease-in-out infinite alternate;
+        }
+        @keyframes pulse-glow { 0%{opacity:.5;transform:translateX(-50%) scale(1)} 100%{opacity:1;transform:translateX(-50%) scale(1.15)} }
+        .bg-glow-2 {
+            position: fixed; bottom: -300px; right: -200px;
+            width: 600px; height: 600px; z-index: 0;
+            background: radial-gradient(circle, rgba(236,72,153,.06) 0%, transparent 70%);
+            animation: pulse-glow 12s ease-in-out infinite alternate-reverse;
+        }
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* ─── Nav ──────────────────────────────────────────────── */
+        nav {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+            background: rgba(6,8,13,.8);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(99,102,241,.1);
+        }
+        .nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+        .nav-logo { font-size: 1.2rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .nav-logo .shield { font-size: 1.4rem; }
+        .nav-links { display: flex; gap: 28px; align-items: center; }
+        .nav-links a { color: #8b949e; text-decoration: none; font-size: .9rem; font-weight: 500; transition: color .2s; }
+        .nav-links a:hover { color: #c9d1d9; }
+        .nav-cta {
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            color: #fff!important; padding: 8px 18px; border-radius: 8px;
+            font-weight: 600!important; font-size: .85rem!important;
+            transition: transform .2s, box-shadow .2s!important;
+        }
+        .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(99,102,241,.4); }
+
+        /* ─── Hero ─────────────────────────────────────────────── */
+        .hero { padding: 160px 0 80px; text-align: center; }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.2);
+            border-radius: 999px; padding: 6px 16px; margin-bottom: 28px;
+            font-size: .8rem; color: #a5b4fc; font-weight: 500;
+            animation: badge-glow 3s ease-in-out infinite;
+        }
+        @keyframes badge-glow { 0%,100%{box-shadow:0 0 0 rgba(99,102,241,0)} 50%{box-shadow:0 0 20px rgba(99,102,241,.15)} }
+        .hero-badge .dot { width: 6px; height: 6px; background: #6366f1; border-radius: 50%; animation: blink 2s infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+        .hero h1 {
+            font-size: clamp(2.4rem,6vw,4.2rem); font-weight: 900; line-height: 1.1; margin-bottom: 24px;
+            background: linear-gradient(135deg,#fff 0%,#a5b4fc 50%,#c084fc 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .hero p { font-size: 1.2rem; color: #8b949e; max-width: 600px; margin: 0 auto 40px; line-height: 1.7; }
+        .hero-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn { padding: 14px 32px; border-radius: 12px; font-weight: 600; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: transform .2s, box-shadow .2s; }
+        .btn:hover { transform: translateY(-2px); }
+        .btn-primary { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: #fff; box-shadow: 0 4px 30px rgba(99,102,241,.3); }
+        .btn-primary:hover { box-shadow: 0 8px 40px rgba(99,102,241,.5); }
+        .btn-secondary { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: #c9d1d9; }
+        .btn-secondary:hover { background: rgba(255,255,255,.08); }
+        .install-cmd {
+            margin-top: 28px; display: inline-flex; align-items: center; gap: 12px;
+            background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+            border-radius: 10px; padding: 12px 24px;
+            font-family: 'JetBrains Mono', monospace; font-size: .9rem; color: #a5b4fc;
+            cursor: pointer; transition: border-color .2s;
+        }
+        .install-cmd:hover { border-color: rgba(99,102,241,.4); }
+        .install-cmd .prefix { color: #6366f1; }
+        .install-cmd .copy-icon { color: #4a4e5c; font-size: .85rem; }
+
+        /* ─── Terminal ─────────────────────────────────────────── */
+        .terminal-section { padding: 60px 0 100px; }
+        .terminal {
+            background: #0d1117; border: 1px solid rgba(99,102,241,.15); border-radius: 16px; overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(99,102,241,.05), 0 20px 60px rgba(0,0,0,.5), 0 0 120px rgba(99,102,241,.05);
+            animation: terminal-float 6s ease-in-out infinite;
+        }
+        @keyframes terminal-float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        .terminal-bar { background: #161b22; padding: 12px 16px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #21262d; }
+        .terminal-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .terminal-dot.r { background: #ff5f56; } .terminal-dot.y { background: #ffbd2e; } .terminal-dot.g { background: #27c93f; }
+        .terminal-title { color: #484f58; font-size: .8rem; margin-left: 8px; font-family: 'JetBrains Mono', monospace; }
+        .terminal-body { padding: 24px 28px; font-family: 'JetBrains Mono', monospace; font-size: .82rem; line-height: 1.7; overflow-x: auto; min-height: 420px; }
+        .t-dim { color: #484f58; } .t-muted { color: #6b7280; } .t-white { color: #e2e8f0; }
+        .t-green { color: #4ade80; } .t-red { color: #f87171; } .t-amber { color: #fbbf24; }
+        .t-cyan { color: #67e8f9; } .t-purple { color: #c084fc; } .t-blue { color: #60a5fa; }
+        .t-bold { font-weight: 700; } .t-line { display: block; min-height: 1.7em; } .t-prompt { color: #6366f1; }
+
+        /* ─── Section styles ───────────────────────────────────── */
+        .section-header { text-align: center; margin-bottom: 64px; }
+        .section-header h2 { font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .section-header p { color: #8b949e; font-size: 1.1rem; max-width: 500px; margin: 0 auto; }
+        .features { padding: 80px 0; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .feature-card {
+            background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06);
+            border-radius: 16px; padding: 32px; transition: transform .3s, border-color .3s, box-shadow .3s;
+        }
+        .feature-card:hover { transform: translateY(-4px); border-color: rgba(99,102,241,.3); box-shadow: 0 8px 40px rgba(99,102,241,.08); }
+        .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 20px; }
+        .fi-purple { background: rgba(99,102,241,.1); } .fi-green { background: rgba(74,222,128,.1); }
+        .fi-red { background: rgba(248,113,113,.1); } .fi-cyan { background: rgba(103,232,249,.1); }
+        .fi-amber { background: rgba(251,191,36,.1); } .fi-pink { background: rgba(236,72,153,.1); }
+        .feature-card h3 { font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+        .feature-card p { color: #8b949e; font-size: .92rem; line-height: 1.6; }
+        .agents { padding: 80px 0; }
+        .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+        .agent-chip {
+            background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+            border-radius: 12px; padding: 16px 12px; text-align: center;
+            font-size: .85rem; color: #c9d1d9; font-weight: 500; transition: transform .2s, border-color .2s;
+        }
+        .agent-chip:hover { transform: translateY(-2px); border-color: rgba(99,102,241,.3); }
+        .agent-chip .emoji { font-size: 1.6rem; display: block; margin-bottom: 8px; }
+        .commands { padding: 80px 0; }
+        .cmd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+        .cmd-item {
+            display: flex; align-items: flex-start; gap: 16px;
+            background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05);
+            border-radius: 12px; padding: 20px; transition: border-color .2s;
+        }
+        .cmd-item:hover { border-color: rgba(99,102,241,.2); }
+        .cmd-code {
+            font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: #a5b4fc;
+            white-space: nowrap; background: rgba(99,102,241,.08); padding: 4px 10px;
+            border-radius: 6px; flex-shrink: 0;
+        }
+        .cmd-desc { font-size: .88rem; color: #8b949e; }
+
+        /* ─── Roadmap ──────────────────────────────────────────── */
+        .roadmap { padding: 80px 0; }
+        .roadmap-intro {
+            max-width: 700px; margin: 0 auto 48px; text-align: center;
+        }
+        .roadmap-intro p { color: #8b949e; font-size: .95rem; line-height: 1.7; }
+        .roadmap-grid { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 800px; margin: 0 auto; position: relative; }
+        .roadmap-grid::before {
+            content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2px;
+            background: linear-gradient(180deg, rgba(99,102,241,.3), rgba(99,102,241,.05));
+        }
+        .roadmap-item {
+            display: flex; gap: 24px; padding: 24px 0; position: relative;
+        }
+        .roadmap-dot {
+            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+            margin-top: 6px; position: relative; left: 19px; z-index: 1;
+        }
+        .roadmap-dot.done { background: #4ade80; box-shadow: 0 0 8px rgba(74,222,128,.4); }
+        .roadmap-dot.active { background: #6366f1; box-shadow: 0 0 12px rgba(99,102,241,.5); animation: dot-pulse 2s infinite; }
+        .roadmap-dot.planned { background: #484f58; border: 2px solid #6b7280; }
+        @keyframes dot-pulse { 0%,100%{box-shadow:0 0 8px rgba(99,102,241,.3)} 50%{box-shadow:0 0 20px rgba(99,102,241,.6)} }
+        .roadmap-content { padding-left: 16px; flex: 1; }
+        .roadmap-content h3 { font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .roadmap-content .status {
+            font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+            padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px;
+        }
+        .status-shipped { background: rgba(74,222,128,.15); color: #4ade80; }
+        .status-active { background: rgba(99,102,241,.15); color: #a5b4fc; }
+        .status-planned { background: rgba(107,114,128,.15); color: #9ca3af; }
+        .roadmap-content p { color: #8b949e; font-size: .88rem; line-height: 1.6; }
+        .roadmap-content .agent-paths {
+            margin-top: 12px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+            border-radius: 10px; padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+        }
+        .agent-paths .path-row { display: flex; gap: 12px; align-items: baseline; padding: 3px 0; }
+        .agent-paths .agent-name { color: #a5b4fc; min-width: 100px; font-weight: 600; }
+        .agent-paths .agent-path { color: #6b7280; }
+        .roadmap-content .note {
+            margin-top: 12px; padding: 12px 16px;
+            background: rgba(99,102,241,.05); border-left: 3px solid rgba(99,102,241,.3);
+            border-radius: 0 8px 8px 0; font-size: .82rem; color: #8b949e; line-height: 1.6;
+        }
+        .note strong { color: #a5b4fc; }
+        .roadmap-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .roadmap-tag {
+            font-size: .7rem; padding: 2px 8px; border-radius: 4px;
+            background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+            color: #8b949e; font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ─── CTA ──────────────────────────────────────────────── */
+        .cta { padding: 100px 0; text-align: center; }
+        .cta-box {
+            background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08));
+            border: 1px solid rgba(99,102,241,.15); border-radius: 24px;
+            padding: 64px 40px; position: relative; overflow: hidden;
+        }
+        .cta-box::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 30% 50%, rgba(99,102,241,.1), transparent 60%); }
+        .cta-box h2 { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 12px; position: relative; }
+        .cta-box p { color: #8b949e; font-size: 1.1rem; margin-bottom: 32px; position: relative; }
+        .cta-box .hero-actions { position: relative; }
+        footer { border-top: 1px solid rgba(255,255,255,.06); padding: 40px 0; text-align: center; color: #484f58; font-size: .85rem; }
+        footer a { color: #6366f1; text-decoration: none; } footer a:hover { text-decoration: underline; }
+
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity .8s ease, transform .8s ease; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        .typing-cursor { display: inline-block; width: 8px; height: 1.1em; background: #6366f1; margin-left: 2px; animation: cursor-blink 1s step-end infinite; vertical-align: text-bottom; }
+        @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        @media (max-width: 768px) {
+            .nav-links { display: none; } .hero { padding: 120px 0 60px; }
+            .terminal-body { font-size: .7rem; padding: 16px; } .hero h1 { font-size: 2rem; }
+            .feature-grid, .cmd-grid { grid-template-columns: 1fr; }
+            .roadmap-grid::before { left: 18px; } .roadmap-dot { left: 13px; }
+        }
+    </style>
 </head>
 <body>
-  <p>AgentScope moved to <a href="/">abdouloued.github.io</a>.</p>
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- Nav -->
+    <nav>
+        <div class="nav-inner">
+            <a href="#" class="nav-logo"><span class="shield">🛡️</span> AgentScope</a>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#agents">Agents</a>
+                <a href="#commands">Commands</a>
+                <a href="#roadmap">Roadmap</a>
+                <a href="https://github.com/abdouloued/agentscopev2" class="nav-cta">⭐ Star on GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-badge"><span class="dot"></span> Built in Rust · Works with any AI agent</div>
+            <h1>Did your AI agent do<br>only what you asked?</h1>
+            <p>AgentScope is a scope firewall and audit layer for AI coding agents.
+               It watches what they change and blocks policy violations — before they reach git.</p>
+            <div class="hero-actions">
+                <a href="https://github.com/abdouloued/agentscopev2" class="btn btn-primary">Get Started →</a>
+                <a href="#demo" class="btn btn-secondary">See it in action ↓</a>
+            </div>
+            <div class="install-cmd" onclick="navigator.clipboard.writeText('cargo install agentscope');this.querySelector('.copy-icon').textContent='✓ copied'">
+                <span class="prefix">$</span> cargo install agentscope <span class="copy-icon">📋</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Terminal -->
+    <section class="terminal-section" id="demo">
+        <div class="container fade-in">
+            <div class="terminal">
+                <div class="terminal-bar">
+                    <div class="terminal-dot r"></div><div class="terminal-dot y"></div><div class="terminal-dot g"></div>
+                    <span class="terminal-title">agentscope check</span>
+                </div>
+                <div class="terminal-body" id="terminal-output"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header fade-in"><h2>Why AgentScope?</h2><p>Your agent fixed the bug. It also rewrote your auth module. AgentScope tells you — before you commit.</p></div>
+            <div class="feature-grid">
+                <div class="feature-card fade-in"><div class="feature-icon fi-red">🚫</div><h3>Policy Engine</h3><p>Deterministic glob-based rules. Block .env, auth files, migrations — anything sensitive. No AI judgment needed.</p></div>
+                <div class="feature-card fade-in"><div class="feature-icon fi-purple">🧠</div><h3>LLM Judge</h3><p>Ask a local LLM whether the changes match your mission. Runs on Ollama — no data leaves your machine. Pick any model.</p></div>
+                <div class="feature-card fade-in"><div class="feature-icon fi-green">📊</div><h3>Live TUI Dashboard</h3><p>Watch file changes in real time with bar charts, pie charts, health bars. Press 'j' to run the judge inline.</p></div>
+                <div class="feature-card fade-in"><div class="feature-icon fi-cyan">🔒</div><h3>Git Pre-commit Hook</h3><p>Install with one command. Every commit runs agentscope check. Policy violations block the commit automatically.</p></div>
+                <div class="feature-card fade-in"><div class="feature-icon fi-amber">⚡</div><h3>Agent-Agnostic</h3><p>Works with any agent that writes to your filesystem. Claude Code, Codex, Cursor, Gemini CLI, Copilot, and more.</p></div>
+                <div class="feature-card fade-in"><div class="feature-icon fi-pink">🔍</div><h3>Full Audit Trail</h3><p>Every session is logged. Review past sessions, export JSON for CI, share markdown reports in PRs.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agents -->
+    <section class="agents" id="agents">
+        <div class="container">
+            <div class="section-header fade-in"><h2>Works with every agent</h2><p>First-class integrations for the tools you already use.</p></div>
+            <div class="agents-grid fade-in">
+                <div class="agent-chip"><span class="emoji">🤖</span>Claude Code</div>
+                <div class="agent-chip"><span class="emoji">📦</span>Codex CLI</div>
+                <div class="agent-chip"><span class="emoji">🖥️</span>Codex App</div>
+                <div class="agent-chip"><span class="emoji">✨</span>Cursor</div>
+                <div class="agent-chip"><span class="emoji">💎</span>Gemini CLI</div>
+                <div class="agent-chip"><span class="emoji">🔧</span>OpenCode</div>
+                <div class="agent-chip"><span class="emoji">🐾</span>OpenClaw</div>
+                <div class="agent-chip"><span class="emoji">⚡</span>Hermes</div>
+                <div class="agent-chip"><span class="emoji">🚀</span>Copilot CLI</div>
+                <div class="agent-chip"><span class="emoji">🤹</span>Droid</div>
+                <div class="agent-chip"><span class="emoji">🧩</span>Pi</div>
+                <div class="agent-chip"><span class="emoji">🛠️</span>Custom</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Commands -->
+    <section class="commands" id="commands">
+        <div class="container">
+            <div class="section-header fade-in"><h2>Every command you need</h2><p>Claude Code / Codex-style CLI with model management, config, hooks, and more.</p></div>
+            <div class="cmd-grid fade-in">
+                <div class="cmd-item"><span class="cmd-code">start "mission"</span><span class="cmd-desc">Begin a session with a stated mission</span></div>
+                <div class="cmd-item"><span class="cmd-code">check</span><span class="cmd-desc">Check changes against mission + policy</span></div>
+                <div class="cmd-item"><span class="cmd-code">judge -m llama3</span><span class="cmd-desc">Run LLM judge with any model</span></div>
+                <div class="cmd-item"><span class="cmd-code">model list</span><span class="cmd-desc">List available Ollama models</span></div>
+                <div class="cmd-item"><span class="cmd-code">model set qwen3.5:2b</span><span class="cmd-desc">Set default model</span></div>
+                <div class="cmd-item"><span class="cmd-code">report</span><span class="cmd-desc">Beautiful terminal report dashboard</span></div>
+                <div class="cmd-item"><span class="cmd-code">diff --problems</span><span class="cmd-desc">Quick view of blocked/unasked files</span></div>
+                <div class="cmd-item"><span class="cmd-code">hook install</span><span class="cmd-desc">Auto-check on every git commit</span></div>
+                <div class="cmd-item"><span class="cmd-code">config show</span><span class="cmd-desc">View all settings</span></div>
+                <div class="cmd-item"><span class="cmd-code">config set provider claude</span><span class="cmd-desc">Switch to Claude API</span></div>
+                <div class="cmd-item"><span class="cmd-code">watch</span><span class="cmd-desc">Live TUI with charts + inline judge</span></div>
+                <div class="cmd-item"><span class="cmd-code">audit last-5</span><span class="cmd-desc">Review past sessions</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Roadmap ────────────────────────────────────────────────── -->
+    <section class="roadmap" id="roadmap">
+        <div class="container">
+            <div class="section-header fade-in">
+                <h2>Agent-Aware Monitoring Roadmap</h2>
+                <p>From passive watcher to active observer. Here's where AgentScope is heading — honestly.</p>
+            </div>
+
+            <div class="roadmap-intro fade-in">
+                <p>Today, AgentScope watches the <em>filesystem</em>. Tomorrow, it will read agent <em>context</em> — the task they were given, the model they're using, and what they think they're doing. All reading is <strong>local</strong>, <strong>best-effort</strong>, and <strong>opt-in</strong>.</p>
+            </div>
+
+            <div class="roadmap-grid fade-in">
+
+                <!-- Shipped -->
+                <div class="roadmap-item">
+                    <div class="roadmap-dot done"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-shipped">Shipped</span>
+                        <h3>Filesystem-level monitoring</h3>
+                        <p>Git diff analysis, glob-based policy engine, LLM judge (Ollama / Claude / OpenAI), TUI dashboard with charts, pre-commit hooks, full audit trail.</p>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-dot done"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-shipped">Shipped</span>
+                        <h3>Model & config management</h3>
+                        <p>Claude Code / Codex-style commands: <code>model list</code>, <code>model set</code>, <code>model test</code>, <code>config show</code>, <code>config set</code>. Switch between Ollama models or cloud providers on the fly.</p>
+                    </div>
+                </div>
+
+                <!-- Active -->
+                <div class="roadmap-item">
+                    <div class="roadmap-dot active"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-active">In progress</span>
+                        <h3>Read agent task context from local logs</h3>
+                        <p>Parse session transcripts from each agent's local storage to extract the original task/prompt. Auto-populate the AgentScope mission from what the agent was actually asked to do. Show source and confidence in <code>watch</code> mode.</p>
+
+                        <div class="agent-paths">
+                            <div class="path-row"><span class="agent-name">Claude Code</span><span class="agent-path">~/.claude/projects/&lt;path&gt;/*.jsonl</span></div>
+                            <div class="path-row"><span class="agent-name">Codex CLI</span><span class="agent-path">~/.codex/sessions/rollout-*.jsonl</span></div>
+                            <div class="path-row"><span class="agent-name">OpenCode</span><span class="agent-path">~/.local/share/opencode/project/&lt;slug&gt;/storage/</span></div>
+                            <div class="path-row"><span class="agent-name">Cursor</span><span class="agent-path">~/.cursor/projects/&lt;hash&gt;/agent-transcripts/</span></div>
+                            <div class="path-row"><span class="agent-name">Gemini CLI</span><span class="agent-path">~/.gemini/tmp/&lt;hash&gt;/chats/</span></div>
+                            <div class="path-row"><span class="agent-name">Copilot CLI</span><span class="agent-path">~/.copilot/session-state/</span></div>
+                        </div>
+
+                        <div class="note">
+                            <strong>Privacy guarantee:</strong> All log reading happens locally on your machine. AgentScope never uploads transcripts, prompts, or session content anywhere. Each agent reader is opt-in and can be disabled in <code>agentscope.yaml</code>. If a log format changes or can't be parsed, AgentScope falls back silently to manual mission input.
+                        </div>
+
+                        <div class="roadmap-tags">
+                            <span class="roadmap-tag">local-only</span>
+                            <span class="roadmap-tag">opt-in</span>
+                            <span class="roadmap-tag">best-effort</span>
+                            <span class="roadmap-tag">configurable</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Planned -->
+                <div class="roadmap-item">
+                    <div class="roadmap-dot planned"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-planned">Planned</span>
+                        <h3>Auto-detect active agent</h3>
+                        <p>Detect which agent is running by checking for known process signatures, lockfiles, and local config directories (<code>.claude/</code>, <code>.codex/</code>, <code>.cursor/</code>). Automatically set the agent type in <code>agentscope start</code> without requiring <code>--agent</code> flag.</p>
+                        <div class="roadmap-tags">
+                            <span class="roadmap-tag">process detection</span>
+                            <span class="roadmap-tag">lockfile heuristics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-dot planned"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-planned">Planned</span>
+                        <h3>Mission inference & live update</h3>
+                        <p>When an agent starts a new task, AgentScope will detect the new session transcript, extract the user's prompt, and auto-update the active mission. The TUI will show inferred mission text with a confidence indicator (<em>"inferred from Claude Code transcript, 92% match"</em>) so you always know the source.</p>
+                        <div class="roadmap-tags">
+                            <span class="roadmap-tag">JSONL parsing</span>
+                            <span class="roadmap-tag">SQLite reading</span>
+                            <span class="roadmap-tag">confidence scoring</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-dot planned"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-planned">Planned</span>
+                        <h3>MCP server for agent integration</h3>
+                        <p>Expose AgentScope as an MCP (Model Context Protocol) server so agents can natively query policy, check scope, and report their own mission — instead of AgentScope having to guess. Agents that support MCP tools will be able to call <code>agentscope.check_scope</code> and <code>agentscope.report_mission</code> directly.</p>
+                        <div class="roadmap-tags">
+                            <span class="roadmap-tag">MCP server</span>
+                            <span class="roadmap-tag">stdio transport</span>
+                            <span class="roadmap-tag">bidirectional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-dot planned"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-planned">Planned</span>
+                        <h3>Plugin & skill system</h3>
+                        <p>A plugin architecture so the community can add new agent readers, custom policy rules, output formats, and notification hooks. Planned integrations include Slack/Discord notifications, GitHub PR comments, and OpenTelemetry trace export for enterprise observability stacks.</p>
+                        <div class="roadmap-tags">
+                            <span class="roadmap-tag">plugins</span>
+                            <span class="roadmap-tag">community</span>
+                            <span class="roadmap-tag">OpenTelemetry</span>
+                            <span class="roadmap-tag">webhooks</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="roadmap-item">
+                    <div class="roadmap-dot planned"></div>
+                    <div class="roadmap-content">
+                        <span class="status status-planned">Planned</span>
+                        <h3>Multi-agent session tracking</h3>
+                        <p>Track multiple agents working on the same repo simultaneously. Compare their actions, detect conflicts, and show a unified view of who changed what. Essential for teams running different agents on different tasks in the same codebase.</p>
+                        <div class="roadmap-tags">
+                            <span class="roadmap-tag">multi-agent</span>
+                            <span class="roadmap-tag">conflict detection</span>
+                            <span class="roadmap-tag">team mode</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-box fade-in">
+                <h2>Trust, but verify.</h2>
+                <p>Start using AgentScope in 30 seconds. MIT licensed. Open source forever.</p>
+                <div class="hero-actions">
+                    <a href="https://github.com/abdouloued/agentscopev2" class="btn btn-primary">⭐ Star on GitHub</a>
+                    <a href="https://github.com/abdouloued/agentscopev2/blob/main/CONTRIBUTING.md" class="btn btn-secondary">Contribute →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer><div class="container"><p>🛡️ AgentScope — MIT License · <a href="https://github.com/abdouloued/agentscopev2">GitHub</a> · Built with ❤️ in Rust</p></div></footer>
+
+    <script>
+    const observer = new IntersectionObserver(entries => {
+        entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: .1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    const terminalLines = [
+        { text: '', delay: 200 },
+        { spans: [{ text: '  session ', cls: 't-dim' },{ text: '01KSDYJN1V3X', cls: 't-cyan' },{ text: '  ·  ', cls: 't-dim' },{ text: 'claude-code', cls: 't-muted' }], delay: 60 },
+        { spans: [{ text: '  mission ', cls: 't-dim' },{ text: '"Fix the rate-limit bug in api/middleware.ts"', cls: 't-white' }], delay: 60 },
+        { text: '', delay: 100 },
+        { text: '  ─────────────────────────────────────────────────', cls: 't-dim', delay: 30 },
+        { spans: [{ text: '    scanning working tree against git baseline...', cls: 't-muted' }], delay: 80 },
+        { text: '', delay: 300 },
+        { spans: [{ text: '  IN SCOPE ', cls: 't-green t-bold' },{ text: '  src/api/middleware.ts       ', cls: 't-blue' },{ text: ' +47 −12', cls: 't-dim' }], delay: 100 },
+        { spans: [{ text: '  IN SCOPE ', cls: 't-green t-bold' },{ text: '  src/api/middleware.test.ts  ', cls: 't-blue' },{ text: ' +31 −0', cls: 't-dim' }], delay: 80 },
+        { spans: [{ text: '  UNASKED  ', cls: 't-amber t-bold' },{ text: '  src/api/router.ts          ', cls: 't-amber' },{ text: ' +18 −3', cls: 't-dim' }], delay: 80 },
+        { spans: [{ text: '  BLOCKED  ', cls: 't-red t-bold' },{ text: '  src/auth/session.ts        ', cls: 't-red' },{ text: ' +9 −41', cls: 't-dim' }], delay: 80 },
+        { spans: [{ text: '  BLOCKED  ', cls: 't-red t-bold' },{ text: '  .env.local                 ', cls: 't-red' },{ text: ' +2 −0', cls: 't-dim' }], delay: 80 },
+        { text: '', delay: 100 },
+        { text: '  ─────────────────────────────────────────────────', cls: 't-dim', delay: 30 },
+        { text: '', delay: 200 },
+        { text: '  ╔═══════════════════════════════════════════╗', cls: 't-red', delay: 50 },
+        { text: '  ║  BLOCK — session halted                   ║', cls: 't-red t-bold', delay: 50 },
+        { text: '  ║  2 violations of declared scope policy    ║', cls: 't-red', delay: 50 },
+        { text: '  ╚═══════════════════════════════════════════╝', cls: 't-red', delay: 50 },
+        { text: '', delay: 100 },
+        { spans: [{ text: '    ✕ ', cls: 't-red t-bold' },{ text: ' src/auth/session.ts', cls: 't-white' },{ text: '  — auth files are protected', cls: 't-muted' }], delay: 80 },
+        { spans: [{ text: '    ✕ ', cls: 't-red t-bold' },{ text: ' .env.local', cls: 't-white' },{ text: '          — env files always blocked', cls: 't-muted' }], delay: 80 },
+        { text: '', delay: 200 },
+        { spans: [{ text: '  LLM judge', cls: 't-dim' },{ text: '  (ollama / qwen3.5:2b)', cls: 't-dim' }], delay: 60 },
+        { text: '', delay: 100 },
+        { spans: [{ text: '    DRIFT DETECTED', cls: 't-red t-bold' },{ text: '  — 38% confidence changes match mission', cls: 't-muted' }], delay: 80 },
+        { spans: [{ text: '    ', cls: '' },{ text: '████', cls: 't-red' },{ text: '░░░░░░', cls: 't-dim' },{ text: '  38%', cls: 't-red' }], delay: 80 },
+        { text: '', delay: 100 },
+        { spans: [{ text: '    "The agent addressed rate-limiting but made unexplained', cls: 't-muted' }], delay: 60 },
+        { spans: [{ text: '     changes to authentication logic unrelated to the bug."', cls: 't-muted' }], delay: 60 },
+        { text: '', delay: 100 },
+        { spans: [{ text: '  2 in scope', cls: 't-green' },{ text: '  ·  ', cls: 't-dim' },{ text: '1 unasked', cls: 't-amber' },{ text: '  ·  ', cls: 't-dim' },{ text: '2 blocked', cls: 't-red' }], delay: 80 },
+    ];
+
+    function renderTerminal() {
+        const o = document.getElementById('terminal-output');
+        o.innerHTML = '<span class="t-line"><span class="t-prompt">$</span> <span class="t-white">agentscope check</span><span class="typing-cursor"></span></span>';
+        let d = 800;
+        terminalLines.forEach(line => {
+            d += line.delay || 60;
+            setTimeout(() => {
+                o.querySelectorAll('.typing-cursor').forEach(c => c.remove());
+                const el = document.createElement('span');
+                el.className = 't-line';
+                if (line.spans) {
+                    line.spans.forEach(s => { const sp = document.createElement('span'); sp.className = s.cls||''; sp.textContent = s.text; el.appendChild(sp); });
+                } else { el.className = `t-line ${line.cls||''}`; el.textContent = line.text||'\u00A0'; }
+                o.appendChild(el); o.scrollTop = o.scrollHeight;
+            }, d);
+        });
+    }
+
+    const tObs = new IntersectionObserver(entries => {
+        entries.forEach(e => { if(e.isIntersecting) { renderTerminal(); tObs.unobserve(e.target); } });
+    }, { threshold: .3 });
+    const ts = document.querySelector('.terminal-section');
+    if(ts) tObs.observe(ts);
+    </script>
 </body>
 </html>
