@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AgentScope — Scope Checks for AI Coding Agents</title>
-<meta name="description" content="AgentScope is a Rust CLI that records an agent mission, watches Git/filesystem changes, checks policy, and reports scope drift before commit.">
-<meta property="og:title" content="AgentScope — Scope Checks for AI Coding Agents">
-<meta property="og:description" content="A Rust CLI for mission-based Git diff checks, policy guardrails, live watch mode, and optional LLM judging.">
+<title>AgentScope - Scope Firewall for AI Coding Agents</title>
+<meta name="description" content="AgentScope records or detects your coding-agent mission, watches Git changes, blocks protected paths, and reports scope drift before commit.">
+<meta property="og:title" content="AgentScope - Scope Firewall for AI Coding Agents">
+<meta property="og:description" content="A Rust CLI for mission-based Git checks, local agent context detection, policy guardrails, live watch mode, and optional LLM judging.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://abdouloued.github.io/">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,19 +16,18 @@
   *, *::before, *::after { box-sizing: border-box; }
   :root {
     --bg: #080a0f;
-    --panel: #10131b;
-    --panel-2: #151a24;
-    --line: rgba(226, 232, 240, 0.13);
-    --line-strong: rgba(226, 232, 240, 0.24);
-    --text: #edf2f7;
-    --muted: #9aa4b2;
-    --dim: #626c7a;
-    --green: #54e38b;
-    --amber: #ffc44d;
-    --red: #ff6b6b;
-    --cyan: #62d9ff;
-    --violet: #b48cff;
-    --blue: #7aa8ff;
+    --panel: #11141b;
+    --panel-2: #161a22;
+    --ink: #f4f7fb;
+    --muted: #a7b0be;
+    --dim: #687384;
+    --line: rgba(226, 232, 240, 0.16);
+    --line-strong: rgba(226, 232, 240, 0.28);
+    --cyan: #60d9ff;
+    --green: #58e391;
+    --amber: #ffc95a;
+    --red: #ff7070;
+    --violet: #c49bff;
     --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
     --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
@@ -36,37 +35,26 @@
   body {
     margin: 0;
     background:
-      linear-gradient(180deg, rgba(98, 217, 255, 0.05), transparent 28rem),
+      linear-gradient(180deg, rgba(96, 217, 255, 0.08), transparent 440px),
+      radial-gradient(900px 480px at 80% 8%, rgba(88, 227, 145, 0.08), transparent 62%),
       var(--bg);
-    color: var(--text);
+    color: var(--ink);
     font-family: var(--sans);
-    line-height: 1.6;
-    overflow-x: hidden;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
-  body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-    background-size: 44px 44px;
-    mask-image: linear-gradient(to bottom, black, transparent 760px);
-  }
   a { color: inherit; }
-  code { font-family: var(--mono); }
+  code, pre { font-family: var(--mono); }
   nav {
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 20;
     height: 64px;
     border-bottom: 1px solid var(--line);
-    background: rgba(8, 10, 15, 0.82);
-    backdrop-filter: blur(18px);
+    background: rgba(8, 10, 15, 0.88);
+    backdrop-filter: blur(16px);
   }
-  .nav-inner, .wrap, .wide {
+  .wrap, .wide, .nav-inner {
     width: min(1120px, calc(100% - 40px));
     margin: 0 auto;
   }
@@ -75,136 +63,142 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 24px;
+    gap: 18px;
   }
   .brand {
+    color: var(--ink);
     font-family: var(--mono);
-    font-weight: 700;
-    color: var(--text);
+    font-size: 15px;
+    font-weight: 800;
     text-decoration: none;
   }
   .brand span { color: var(--cyan); }
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 22px;
-    font-size: 13px;
+    gap: 18px;
     color: var(--muted);
+    font-size: 13px;
   }
   .nav-links a {
     text-decoration: none;
     white-space: nowrap;
   }
-  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover { color: var(--ink); }
   .hero {
-    position: relative;
-    padding: 92px 0 68px;
+    padding: 82px 0 58px;
   }
-  .hero-layout {
+  .hero-grid {
     display: grid;
-    grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+    grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
     gap: 46px;
     align-items: center;
-    min-width: 0;
+  }
+  .eyebrow {
+    margin: 0 0 14px;
+    color: var(--green);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
   }
   h1 {
     margin: 0;
     max-width: 760px;
-    font-size: clamp(44px, 6vw, 78px);
+    font-size: clamp(42px, 6vw, 76px);
     line-height: 0.98;
     letter-spacing: 0;
   }
   h1 span { color: var(--cyan); }
-  .hero p {
-    margin: 24px 0 0;
-    max-width: 620px;
+  .lead {
+    max-width: 660px;
+    margin: 22px 0 0;
     color: var(--muted);
     font-size: 18px;
   }
-  .hero-actions {
+  .actions {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-top: 34px;
+    margin-top: 30px;
   }
   .button {
     display: inline-flex;
+    min-height: 44px;
     align-items: center;
     justify-content: center;
-    min-height: 44px;
     padding: 0 18px;
-    border-radius: 8px;
     border: 1px solid var(--line-strong);
-    color: var(--text);
-    text-decoration: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--ink);
     font-family: var(--mono);
     font-size: 13px;
-    background: rgba(255,255,255,0.035);
+    text-decoration: none;
   }
   .button.primary {
-    color: #041015;
     border-color: transparent;
     background: var(--cyan);
-    font-weight: 700;
+    color: #041015;
+    font-weight: 800;
   }
-  .button:hover { transform: translateY(-1px); }
-  .status-strip {
+  .badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 30px;
-    font-family: var(--mono);
-    font-size: 12px;
+    gap: 9px;
+    margin-top: 24px;
   }
-  .status-strip span {
+  .badges span {
     border: 1px solid var(--line);
     border-radius: 999px;
     padding: 6px 10px;
+    background: rgba(17, 20, 27, 0.74);
     color: var(--muted);
-    background: rgba(16,19,27,0.72);
+    font-family: var(--mono);
+    font-size: 12px;
   }
-  .status-strip strong { color: var(--green); font-weight: 600; }
+  .badges strong { color: var(--green); }
   .terminal {
+    min-width: 0;
+    overflow: hidden;
     border: 1px solid var(--line-strong);
     border-radius: 10px;
-    overflow: hidden;
-    background: rgba(10, 13, 19, 0.92);
-    box-shadow: 0 22px 80px rgba(0,0,0,0.46);
-    min-width: 0;
+    background: rgba(7, 9, 14, 0.96);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
   }
   .terminal-top {
-    height: 38px;
     display: flex;
+    height: 38px;
     align-items: center;
     gap: 8px;
     padding: 0 14px;
     border-bottom: 1px solid var(--line);
     background: var(--panel-2);
+    color: var(--dim);
     font-family: var(--mono);
     font-size: 11px;
-    color: var(--dim);
   }
   .dot { width: 9px; height: 9px; border-radius: 50%; }
   .dot.red { background: var(--red); }
   .dot.amber { background: var(--amber); }
   .dot.green { background: var(--green); }
   .terminal-body {
+    min-height: 420px;
     padding: 20px;
+    overflow-x: auto;
+    color: var(--muted);
     font-family: var(--mono);
     font-size: 13px;
-    color: var(--muted);
-    min-height: 420px;
-    overflow-x: auto;
   }
-  .line { display: block; margin: 3px 0; white-space: nowrap; }
+  .line { display: block; margin: 4px 0; white-space: nowrap; }
   .cmd { color: var(--cyan); }
   .ok { color: var(--green); }
   .warn { color: var(--amber); }
   .bad { color: var(--red); }
-  .bright { color: var(--text); }
+  .bright { color: var(--ink); }
   .dim { color: var(--dim); }
   .section {
-    padding: 74px 0;
+    padding: 70px 0;
     border-top: 1px solid var(--line);
   }
   .section-head {
@@ -215,14 +209,14 @@
     margin-bottom: 28px;
   }
   h2 {
+    max-width: 760px;
     margin: 0;
-    max-width: 720px;
-    font-size: clamp(30px, 4vw, 52px);
-    line-height: 1.04;
+    font-size: clamp(30px, 4vw, 50px);
+    line-height: 1.05;
     letter-spacing: 0;
   }
   .section-head p, .section > .wrap > p {
-    max-width: 680px;
+    max-width: 720px;
     margin: 12px 0 0;
     color: var(--muted);
   }
@@ -232,108 +226,104 @@
     gap: 14px;
   }
   .tile {
-    min-height: 170px;
+    min-height: 178px;
     border: 1px solid var(--line);
     border-radius: 8px;
     padding: 20px;
-    background: rgba(16,19,27,0.72);
+    background: rgba(17, 20, 27, 0.72);
   }
   .tile b {
     display: block;
-    margin-bottom: 10px;
-    color: var(--text);
-    font-size: 16px;
+    margin: 0 0 10px;
+    color: var(--ink);
   }
   .tile p {
     margin: 0;
     color: var(--muted);
     font-size: 14px;
   }
-  .tile .num {
+  .num {
     display: block;
-    margin-bottom: 18px;
+    margin-bottom: 14px;
+    color: var(--cyan);
     font-family: var(--mono);
     font-size: 12px;
-    color: var(--cyan);
   }
-  .workflow {
+  .flow {
     display: grid;
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 22px;
-    align-items: stretch;
+    grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+    gap: 18px;
   }
-  .steps {
+  .steps, .panel, .table-card {
     border: 1px solid var(--line);
     border-radius: 8px;
-    overflow: hidden;
-    background: rgba(16,19,27,0.72);
+    background: rgba(17, 20, 27, 0.72);
   }
   .step {
     display: grid;
-    grid-template-columns: 70px 1fr;
-    gap: 18px;
+    grid-template-columns: 86px minmax(0, 1fr);
+    gap: 14px;
     padding: 18px;
     border-bottom: 1px solid var(--line);
   }
   .step:last-child { border-bottom: 0; }
-  .step code {
-    color: var(--cyan);
-    font-weight: 600;
+  .step span {
+    color: var(--dim);
+    font-family: var(--mono);
+    font-size: 12px;
   }
+  .step code { color: var(--cyan); font-weight: 700; }
   .step p {
-    margin: 4px 0 0;
+    margin: 5px 0 0;
     color: var(--muted);
     font-size: 14px;
   }
-  .step span {
-    font-family: var(--mono);
-    color: var(--dim);
-    font-size: 12px;
-  }
-  .command-panel {
-    border: 1px solid var(--line);
-    border-radius: 8px;
+  .panel {
     padding: 20px;
-    background: #070910;
-    font-family: var(--mono);
-    font-size: 13px;
-    min-width: 0;
     overflow-x: auto;
+    background: #070910;
   }
-  .command-panel pre {
-    white-space: pre-wrap;
+  .panel pre {
     margin: 0;
     color: var(--muted);
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
   }
-  .roadmap {
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  th, td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+  }
+  tr:last-child td { border-bottom: 0; }
+  th {
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  td code { color: var(--cyan); }
+  .notice {
+    margin-top: 18px;
+    border-left: 3px solid var(--amber);
+    padding: 16px 18px;
+    background: rgba(255, 201, 90, 0.08);
+    color: var(--muted);
+  }
+  .notice strong { color: var(--ink); }
+  .split {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
-  .roadmap-card {
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 22px;
-    background: rgba(16,19,27,0.78);
-  }
-  .roadmap-card h3 {
-    margin: 0 0 10px;
-    color: var(--violet);
-    font-size: 17px;
-  }
-  .roadmap-card ul {
-    margin: 0;
-    padding-left: 18px;
-    color: var(--muted);
-  }
-  .roadmap-card li { margin: 8px 0; }
-  .truth {
-    border-left: 3px solid var(--amber);
-    padding: 18px 20px;
-    background: rgba(255,196,77,0.07);
-    color: var(--muted);
-  }
-  .truth strong { color: var(--text); }
   footer {
     border-top: 1px solid var(--line);
     padding: 34px 0 44px;
@@ -342,20 +332,19 @@
     font-size: 12px;
   }
   @media (max-width: 920px) {
-    .hero-layout, .workflow, .roadmap { grid-template-columns: 1fr; }
-    .hero { padding-top: 70px; }
+    .hero-grid, .flow, .split, .grid { grid-template-columns: 1fr; }
+    .hero { padding-top: 58px; }
     .terminal-body { min-height: auto; }
-    .grid { grid-template-columns: 1fr; }
     .nav-links { display: none; }
   }
   @media (max-width: 540px) {
-    .nav-inner, .wrap, .wide { width: min(100% - 28px, 1120px); }
-    .hero { padding: 52px 0 48px; }
+    .wrap, .wide, .nav-inner { width: min(100% - 28px, 1120px); }
     h1 { font-size: 42px; }
-    .section { padding: 54px 0; }
+    .section { padding: 52px 0; }
     .step { grid-template-columns: 1fr; gap: 6px; }
-    .terminal-body, .command-panel { font-size: 12px; padding: 16px; }
-    .hero-actions .button { flex: 1 1 100%; }
+    .terminal-body, .panel pre { font-size: 12px; }
+    .actions .button { flex: 1 1 100%; }
+    th, td { padding: 11px 10px; }
   }
 </style>
 </head>
@@ -364,9 +353,10 @@
     <div class="nav-inner">
       <a class="brand" href="#">agent<span>scope</span></a>
       <div class="nav-links">
-        <a href="#today">Shipped</a>
-        <a href="#workflow">Workflow</a>
-        <a href="#roadmap">Roadmap</a>
+        <a href="#start">Start</a>
+        <a href="#agents">Agents</a>
+        <a href="#missing">Missing</a>
+        <a href="#commands">Commands</a>
         <a href="#source">Source</a>
       </div>
     </div>
@@ -374,192 +364,242 @@
 
   <main>
     <section class="hero">
-      <div class="wide hero-layout">
+      <div class="wide hero-grid">
         <div>
-          <h1>Scope checks for<br><span>AI coding agents.</span></h1>
-          <p>AgentScope records the mission you gave an agent, watches the Git working tree, applies deterministic path policy, and can ask a local judge model whether the changed files still match the mission.</p>
-          <div class="hero-actions">
-            <a class="button primary" href="#workflow">See current workflow</a>
-            <a class="button" href="https://github.com/abdouloued/abdouloued.github.io">GitHub Pages source</a>
+          <p class="eyebrow">Rust CLI · local first · Git native</p>
+          <h1>Scope firewall for<br><span>AI coding agents.</span></h1>
+          <p class="lead">AgentScope records or detects what you asked an agent to do, watches the Git working tree, blocks protected paths, and reports scope drift before commit.</p>
+          <div class="actions">
+            <a class="button primary" href="#start">Start in 2 minutes</a>
+            <a class="button" href="https://github.com/abdouloued/agentscopev2">View CLI source</a>
           </div>
-          <div class="status-strip" aria-label="Current project status">
-            <span><strong>shipped</strong> Rust CLI</span>
+          <div class="badges" aria-label="Current status">
             <span><strong>shipped</strong> watch/check/judge</span>
-            <span><strong>planned</strong> agent-log auto detection</span>
+            <span><strong>shipped</strong> local agent detection</span>
+            <span><strong>shipped</strong> MCP JSON methods</span>
           </div>
         </div>
         <div class="terminal" aria-label="AgentScope terminal preview">
           <div class="terminal-top">
             <span class="dot red"></span><span class="dot amber"></span><span class="dot green"></span>
-            <span>agentscope check</span>
+            <span>agentscope monitor --agent auto</span>
           </div>
           <div class="terminal-body">
-            <span class="line"><span class="cmd">$</span> agentscope start "Fix checkout button loading state" --agent codex</span>
-            <span class="line dim">session 01KSDYJN · codex</span>
-            <span class="line bright">mission "Fix checkout button loading state"</span>
+            <span class="line"><span class="cmd">$</span> agentscope agents detect</span>
+            <span class="line">claude-code <span class="dim">not found</span></span>
+            <span class="line">codex       <span class="ok">found</span> confidence 0.70 <span class="bright">"Fix checkout button loading state"</span></span>
+            <br>
+            <span class="line"><span class="cmd">$</span> agentscope attach --agent auto --apply</span>
+            <span class="line bright">attached codex mission from local context</span>
             <br>
             <span class="line"><span class="cmd">$</span> agentscope check</span>
-            <span class="line dim">scanning working tree against active session mission...</span>
-            <br>
             <span class="line"><span class="ok">IN SCOPE</span> src/components/CheckoutButton.tsx <span class="dim">+28 -4</span></span>
-            <span class="line"><span class="ok">IN SCOPE</span> tests/checkout.test.ts <span class="dim">+19 -0</span></span>
             <span class="line"><span class="warn">UNASKED</span> package.json <span class="dim">+2 -2</span></span>
             <span class="line"><span class="bad">BLOCKED</span> .env.local <span class="dim">+1 -0</span></span>
             <br>
             <span class="line"><span class="bad">BLOCK</span> .env.local matched blocked path policy</span>
             <span class="line"><span class="warn">JUDGE</span> ollama / qwen3.5:2b</span>
-            <span class="line bright">DRIFT DETECTED · review unasked files before commit</span>
+            <span class="line bright">DRIFT DETECTED · review before commit</span>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="section" id="today">
+    <section class="section" id="start">
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>What AgentScope does today</h2>
-            <p>The current CLI is mission-based and Git-native. It does not yet read live Codex or Claude transcripts automatically.</p>
+            <h2>Choose the mission flow that fits your session</h2>
+            <p>Manual start is always available. Agent-aware attach saves typing when Codex, Claude Code, Cursor, Gemini CLI, OpenCode, or Copilot has local session history.</p>
+          </div>
+        </div>
+        <div class="flow">
+          <div class="steps">
+            <div class="step">
+              <span>manual</span>
+              <div><code>agentscope start "..." --agent codex</code><p>Best when you want exact control or detection is uncertain.</p></div>
+            </div>
+            <div class="step">
+              <span>detect</span>
+              <div><code>agentscope agents detect</code><p>Find supported local agent logs and infer the latest usable task.</p></div>
+            </div>
+            <div class="step">
+              <span>attach</span>
+              <div><code>agentscope attach --agent auto --apply</code><p>Write the inferred mission only after the dry run looks right.</p></div>
+            </div>
+            <div class="step">
+              <span>monitor</span>
+              <div><code>agentscope monitor --agent auto</code><p>Detect context, show confidence, then open the live TUI.</p></div>
+            </div>
+            <div class="step">
+              <span>enforce</span>
+              <div><code>agentscope check</code><p>Block protected paths and flag files outside the mission.</p></div>
+            </div>
+          </div>
+          <div class="panel">
+<pre><span class="dim"># initialize once per repo</span>
+<span class="cmd">agentscope init</span>
+
+<span class="dim"># option A: precise manual session</span>
+<span class="cmd">agentscope start</span> <span class="bright">"Fix checkout button loading state"</span> <span class="cmd">--agent codex</span>
+
+<span class="dim"># option B: infer from current local agent logs</span>
+<span class="cmd">agentscope agents doctor</span>
+<span class="cmd">agentscope agents detect</span>
+<span class="cmd">agentscope attach --agent auto</span>
+<span class="cmd">agentscope attach --agent auto --apply</span>
+
+<span class="dim"># watch and verify</span>
+<span class="cmd">agentscope watch</span>
+<span class="cmd">agentscope diff --problems</span>
+<span class="cmd">agentscope check</span></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="agents">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Local agent context readers</h2>
+            <p>AgentScope reads local files only. It extracts likely user missions and filters out tool calls, patch hunks, metadata, login commands, timestamps, and app wrapper text.</p>
+          </div>
+        </div>
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr><th>Agent</th><th>Default source</th><th>User action</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Claude Code</td><td><code>~/.claude/projects</code></td><td>Run Claude once, then detect.</td></tr>
+              <tr><td>Codex CLI / app</td><td><code>~/.codex/sessions</code></td><td>Use <code>attach --agent codex</code> or <code>auto</code>.</td></tr>
+              <tr><td>OpenCode</td><td><code>~/.local/share/opencode/project</code></td><td>Override path if storage moved.</td></tr>
+              <tr><td>Cursor</td><td><code>~/.cursor/projects</code></td><td>Use local transcript detection when present.</td></tr>
+              <tr><td>Gemini CLI</td><td><code>~/.gemini/tmp</code></td><td>Metadata-only logs are ignored.</td></tr>
+              <tr><td>Copilot CLI</td><td><code>~/.copilot/session-state</code></td><td>Configurable because local formats vary.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="notice"><strong>Privacy model:</strong> detection reads local logs. It does not upload transcripts. The optional judge runs only when you run judge/check with judging enabled.</p>
+      </div>
+    </section>
+
+    <section class="section" id="missing">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Missing sources are normal</h2>
+            <p>You should not have to manually configure everything. Defaults work first, `doctor` explains gaps, and manual start is the reliable fallback.</p>
           </div>
         </div>
         <div class="grid">
           <div class="tile">
             <span class="num">01</span>
-            <b>Records an active mission</b>
-            <p><code>agentscope start</code> writes `.agentscope/session.json` with the mission, agent label, baseline commit, and timestamp.</p>
+            <b>Run doctor</b>
+            <p><code>agentscope agents doctor</code> shows each checked path and explains that missing agents are not failures.</p>
           </div>
           <div class="tile">
             <span class="num">02</span>
-            <b>Checks changed files</b>
-            <p><code>agentscope check</code> compares working tree changes with policy and the active session mission.</p>
+            <b>Override only when needed</b>
+            <p>Add <code>agents.sources.&lt;agent&gt;.paths</code> if your agent stores logs somewhere custom.</p>
           </div>
           <div class="tile">
             <span class="num">03</span>
-            <b>Watches while agents work</b>
-            <p><code>agentscope watch</code> refreshes the current Git/filesystem view and shows file verdicts in a terminal UI.</p>
+            <b>Stay safe by default</b>
+            <p>Auto-attach is off. Low-confidence missions do not silently rewrite your active session.</p>
           </div>
-          <div class="tile">
-            <span class="num">04</span>
-            <b>Blocks protected paths</b>
-            <p>Deterministic glob rules protect `.env*`, secrets, auth paths, migrations, and any policy you configure.</p>
-          </div>
-          <div class="tile">
-            <span class="num">05</span>
-            <b>Runs optional LLM judging</b>
-            <p><code>agentscope judge</code> can use Ollama by default, with configurable Claude or OpenAI providers.</p>
-          </div>
-          <div class="tile">
-            <span class="num">06</span>
-            <b>Reports for humans and CI</b>
-            <p>Use terminal output, JSON, markdown reports, annotated diffs, and a pre-commit hook.</p>
-          </div>
+        </div>
+        <div class="panel" style="margin-top:16px">
+<pre><span class="cmd">agentscope config show</span>
+
+agents:
+  auto_detect: true
+  auto_attach: false
+  preferred:
+    - codex
+    - claude-code
+    - cursor
+  sources:
+    codex:
+      enabled: true
+      paths:
+        - "~/.codex/sessions"
+        - "~/Library/Application Support/Codex/sessions"</pre>
         </div>
       </div>
     </section>
 
-    <section class="section" id="workflow">
-      <div class="wide">
-        <div class="section-head">
-          <div>
-            <h2>Current CLI workflow</h2>
-            <p>AgentScope works beside Codex, Claude Code, Cursor, Gemini CLI, OpenCode, and other tools because it watches the repo boundary rather than requiring an agent runtime.</p>
-          </div>
-        </div>
-        <div class="workflow">
-          <div class="steps">
-            <div class="step">
-              <span>setup</span>
-              <div><code>agentscope init</code><p>Create `agentscope.yaml` and local session storage.</p></div>
-            </div>
-            <div class="step">
-              <span>mission</span>
-              <div><code>agentscope start "..." --agent codex</code><p>Declare the work you asked the agent to do.</p></div>
-            </div>
-            <div class="step">
-              <span>monitor</span>
-              <div><code>agentscope watch</code><p>See changed files, line stats, and verdicts while work is happening.</p></div>
-            </div>
-            <div class="step">
-              <span>verify</span>
-              <div><code>agentscope check</code><p>Run the deterministic policy check before commit or handoff.</p></div>
-            </div>
-            <div class="step">
-              <span>judge</span>
-              <div><code>agentscope judge -m qwen3.5:2b</code><p>Ask a local model for a mission-fit assessment.</p></div>
-            </div>
-          </div>
-          <div class="command-panel" aria-label="CLI examples">
-<pre><span class="dim"># initialize once per repository</span>
-<span class="cmd">agentscope init</span>
-
-<span class="dim"># start a session for the agent work</span>
-<span class="cmd">agentscope start</span> <span class="bright">"Fix checkout button loading state"</span> <span class="cmd">--agent codex</span>
-
-<span class="dim"># monitor the current working tree</span>
-<span class="cmd">agentscope watch</span>
-
-<span class="dim"># review and enforce policy</span>
-<span class="cmd">agentscope diff --problems</span>
-<span class="cmd">agentscope check</span>
-<span class="cmd">agentscope check --json</span>
-
-<span class="dim"># optional model-based drift check</span>
-<span class="cmd">agentscope judge -m qwen3.5:2b</span>
-<span class="cmd">agentscope model list</span>
-<span class="cmd">agentscope config show</span>
-
-<span class="dim"># optional git safety net</span>
-<span class="cmd">agentscope hook install</span></pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="roadmap">
+    <section class="section" id="commands">
       <div class="wrap">
         <div class="section-head">
           <div>
-            <h2>Agent-aware monitoring roadmap</h2>
-            <p>The next layer is reading the current coding agent context directly, then keeping the active mission in sync without manual re-entry.</p>
+            <h2>Everything users need from the CLI</h2>
+            <p>The command set is grouped around setup, detection, monitoring, enforcement, and integration assets.</p>
           </div>
         </div>
-        <div class="roadmap">
-          <div class="roadmap-card">
-            <h3>Planned agent adapters</h3>
-            <ul>
-              <li>Read local task context from Codex, Claude Code, Cursor, Gemini, OpenCode, OpenClaw, Hermes, Copilot, Droid, Pi, and custom agents.</li>
-              <li>Detect active agent, working directory, recent prompt, and confidence level.</li>
-              <li>Validate each adapter against documented or observed local storage before publishing exact paths.</li>
-              <li>Use manual sessions as fallback when no reliable agent context is available.</li>
-            </ul>
+        <div class="split">
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Command</th><th>Use it for</th></tr></thead>
+              <tbody>
+                <tr><td><code>init</code></td><td>Create repo config and local storage.</td></tr>
+                <tr><td><code>start</code></td><td>Manual mission setup.</td></tr>
+                <tr><td><code>agents detect</code></td><td>Find local agent context.</td></tr>
+                <tr><td><code>agents doctor</code></td><td>Explain missing or noisy sources.</td></tr>
+                <tr><td><code>attach</code></td><td>Use inferred context as the active mission.</td></tr>
+                <tr><td><code>monitor</code></td><td>Agent-aware detection plus live watch.</td></tr>
+              </tbody>
+            </table>
           </div>
-          <div class="roadmap-card">
-            <h3>Planned watch upgrades</h3>
-            <ul>
-              <li>Auto-update `.agentscope/session.json` when the detected agent mission changes.</li>
-              <li>Show mission source and confidence in the TUI header.</li>
-              <li>Keep log reading local, best-effort, and opt-in/configurable.</li>
-            </ul>
+          <div class="table-card">
+            <table>
+              <thead><tr><th>Command</th><th>Use it for</th></tr></thead>
+              <tbody>
+                <tr><td><code>check</code></td><td>Policy and scope enforcement.</td></tr>
+                <tr><td><code>diff</code></td><td>Annotated changed-file review.</td></tr>
+                <tr><td><code>judge</code></td><td>Optional model drift review.</td></tr>
+                <tr><td><code>hook</code></td><td>Pre-commit safety net.</td></tr>
+                <tr><td><code>mcp</code></td><td>JSON-RPC style status and detection methods.</td></tr>
+                <tr><td><code>skills/plugins</code></td><td>Generated local integration assets.</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-        <p class="truth"><strong>Not shipped yet:</strong> native Stop hooks, MCP tools, plugin marketplace installs, wrapper commands like <code>agentscope claude</code>, and automatic per-turn agent transcript checks are roadmap items, not current production claims.</p>
       </div>
     </section>
 
     <section class="section" id="source">
       <div class="wrap">
-        <h2>Source and release status</h2>
-        <p>The public product repository is not currently available at `abdouloued/agentscope` or `abdouloued/agentscopev2`, so this page avoids install commands that would send users to a 404. The GitHub Pages source is public and can be reviewed now.</p>
-        <div class="hero-actions">
-          <a class="button primary" href="https://github.com/abdouloued/abdouloued.github.io">View page source</a>
-          <a class="button" href="#roadmap">Review roadmap</a>
+        <div class="section-head">
+          <div>
+            <h2>Source, docs, and honest boundaries</h2>
+            <p>Shipped today: Rust CLI, policy checks, watch/check/judge, local agent detection, attach/monitor, MCP JSON methods, and generated skill/plugin assets.</p>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="tile">
+            <span class="num">repo</span>
+            <b>CLI source</b>
+            <p><a href="https://github.com/abdouloued/agentscopev2">github.com/abdouloued/agentscopev2</a></p>
+          </div>
+          <div class="tile">
+            <span class="num">page</span>
+            <b>GitHub Pages source</b>
+            <p><a href="https://github.com/abdouloued/abdouloued.github.io">github.com/abdouloued/abdouloued.github.io</a></p>
+          </div>
+          <div class="tile">
+            <span class="num">later</span>
+            <b>Roadmap only</b>
+            <p>Native marketplace installs, Stop hooks, and wrapper commands such as <code>agentscope claude</code> are not claimed as shipped.</p>
+          </div>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <div class="wrap">AgentScope · Rust CLI · current features first, roadmap clearly labeled</div>
+    <div class="wrap">AgentScope · local-first scope checks for AI coding agents</div>
   </footer>
 </body>
 </html>
