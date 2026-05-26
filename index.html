@@ -1699,7 +1699,7 @@
   <div class="container">
     <p class="section-label">Plugin Integration Workflow</p>
     <h2 class="section-title">No manual exit.<br><em>Agent holds itself accountable.</em></h2>
-    <p class="section-sub">Install AgentScope as a native plugin for Claude or Codex. The agent reads your instructions from <code>CLAUDE.md</code> / <code>AGENTS.md</code>, and the pre-commit hook enforces scope at every commit — no wrapper command, no manual review step.</p>
+    <p class="section-sub">Use AgentScope in two ways: local instruction files for any agent, or Claude Code's plugin marketplace flow. The pre-commit hook still enforces scope at every commit — no wrapper command, no manual review step.</p>
 
     <!-- Workflow Flow -->
     <div class="plugin-flow">
@@ -1733,39 +1733,39 @@
 
       <!-- Claude Code install -->
       <div>
-        <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Claude</p>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Claude Code marketplace</p>
         <div class="terminal" style="box-shadow:none;">
           <div class="terminal-bar">
             <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
             <span class="terminal-title">install + activate</span>
           </div>
           <div class="terminal-body">
-<span class="t-line t-muted"># Write AgentScope guidance into CLAUDE.md (once per project)</span>
-<span class="t-line"><span class="t-cmd">agentscope plugins install</span> <span class="t-info">--agent claude</span></span>
+<span class="t-line t-muted"># Add the AgentScope plugin marketplace</span>
+<span class="t-line"><span class="t-cmd">/plugin marketplace add</span> <span class="t-info">abdouloued/agentscopev2</span></span>
 <span class="t-line">&nbsp;</span>
-<span class="t-line t-muted"># Claude Code reads CLAUDE.md automatically — no flags needed</span>
-<span class="t-line"><span class="t-cmd">agentscope attach</span> <span class="t-info">--agent auto --apply</span></span>
-<span class="t-line"><span class="t-cmd">claude</span></span>
+<span class="t-line t-muted"># Install the plugin from that marketplace</span>
+<span class="t-line"><span class="t-cmd">/plugin install</span> <span class="t-info">agentscope@agentscope</span></span>
 <span class="t-line">&nbsp;</span>
-<span class="t-line t-muted"># Watch live in the cockpit while Claude works</span>
-<span class="t-line"><span class="t-cmd">agentscope watch</span></span>
+<span class="t-line t-muted"># Local development before publishing:</span>
+<span class="t-line"><span class="t-cmd">/plugin marketplace add</span> <span class="t-info">/path/to/agentscopev2</span></span>
           </div>
         </div>
       </div>
 
       <!-- Codex install -->
       <div>
-        <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Codex</p>
+        <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Local instruction files</p>
         <div class="terminal" style="box-shadow:none;">
           <div class="terminal-bar">
             <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
             <span class="terminal-title">install + activate</span>
           </div>
           <div class="terminal-body">
-<span class="t-line t-muted"># Write AgentScope guidance into AGENTS.md (once per project)</span>
-<span class="t-line"><span class="t-cmd">agentscope plugins install</span> <span class="t-info">--agent codex</span></span>
+<span class="t-line t-muted"># Write AgentScope guidance into native files</span>
+<span class="t-line"><span class="t-cmd">agentscope plugins install</span> <span class="t-info">--agent claude</span>  <span class="t-muted"># CLAUDE.md</span></span>
+<span class="t-line"><span class="t-cmd">agentscope plugins install</span> <span class="t-info">--agent codex</span>   <span class="t-muted"># AGENTS.md</span></span>
 <span class="t-line">&nbsp;</span>
-<span class="t-line t-muted"># Codex reads AGENTS.md automatically — no flags needed</span>
+<span class="t-line t-muted"># Then run your agent normally</span>
 <span class="t-line"><span class="t-cmd">agentscope attach</span> <span class="t-info">--agent auto --apply</span></span>
 <span class="t-line"><span class="t-cmd">codex</span></span>
 <span class="t-line">&nbsp;</span>
